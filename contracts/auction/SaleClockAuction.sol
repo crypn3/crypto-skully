@@ -10,6 +10,7 @@ contract SaleClockAuction is ClockAuction {
     //  right auction in our setSaleAuctionAddress() call.
     bool public isSaleClockAuction = true;
     mapping (uint256 => uint256) totalBuySkull;
+    event ClaimToken(address owner, uint256 tokenId);
 
 
     // Delegate constructor
@@ -63,13 +64,19 @@ contract SaleClockAuction is ClockAuction {
         tokenPO8.transferFrom(_owner, seller, valuePO8Transfer);
     }
 
-    function getTotalBuyBySkull(uint256 _tokenId) view returns (uint256) {
+    function getTotalBuyBySkull(uint256 _tokenId) public view returns (uint256) {
         return totalBuySkull[_tokenId];
     }
 
 
-    function getAddress() view returns (address) {
-        return address(this);
+    function claimToken(uint256 _tokenId) external {
+        require(isOwnerOf(msg.sender, _tokenId));
+        uint256 totalBuy = totalBuySkull[_tokenId];
+        uint256 valuePO8Transfer = totalBuy * 2500000000000000000;
+        PO8BaseToken tokenPO8 = PO8BaseToken(0x1357c8ecb58ba4c193b192b43682cd8edb75e09e);
+        tokenPO8.transferFrom(_owner, msg.sender, valuePO8Transfer);
+        totalBuySkull[_tokenId] = 0;
+        emit ClaimToken(msg.sender, _tokenId);
     }
 
 }

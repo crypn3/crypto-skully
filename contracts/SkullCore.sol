@@ -5,7 +5,7 @@ contract SkullCore is SkullAuction {
 
     // Set in case the core contract is broken and an upgrade is required
     address public newContractAddress;
-    event Mint(address _to, uint256 _tokenId);
+    event Mint(address _to, uint256 attack, uint256 defend, uint256 rank, uint256 _tokenId);
 
     constructor () public {
         // Starts paused.
@@ -15,7 +15,7 @@ contract SkullCore is SkullAuction {
         adminAddress = msg.sender;
 
         // start with the mythical skull 0
-        _createSkull(0, 0, 0, msg.sender);
+        _createSkull(0, 0, 0, 0, msg.sender);
     }
 
     function setNewAddress(address _v2Address) external onlyAdministrator whenPaused {
@@ -39,6 +39,7 @@ contract SkullCore is SkullAuction {
         uint256 birthTime,
         uint256 attack,
         uint256 defend,
+        uint256 rank,
         uint256 genes
     ) {
         Skull storage skull = skulls[_id];
@@ -46,6 +47,7 @@ contract SkullCore is SkullAuction {
         birthTime = uint256(skull.birthTime);
         attack = uint256(skull.attack);
         defend = uint256(skull.defend);
+        rank = uint256(skull.rank);
         genes = skull.genes;
     }
 
@@ -61,11 +63,12 @@ contract SkullCore is SkullAuction {
         rootAddress.transfer(address(this).balance);
     }
 
-    function mint(address _to, uint256 _attack, uint256 _defend, uint256 _genes, string _tokenURI) public whenNotPaused onlyAdministrator returns (uint256 tokenId) {
+    function mint(address _to, uint256 _attack, uint256 _defend, uint256 _rank, uint256 _genes, string _tokenURI) public whenNotPaused onlyAdministrator returns (uint256 tokenId) {
         Skull memory _sklObj = Skull({
             birthTime: uint64(now),
             attack: uint16(_attack),
             defend: uint16(_defend),
+            rank: uint16(_rank),
             genes: _genes
             });
 
@@ -75,13 +78,13 @@ contract SkullCore is SkullAuction {
         tokenId = skulls.push(_sklObj) - 1;
         _mint(_to, tokenId);
         _setTokenURI(tokenId, _tokenURI);
-        emit Mint(_to, tokenId);
+        emit Mint(_to, _attack, _defend, _rank, tokenId);
     }
 
     /// @dev setTokenURI(): Set an existing token URI.
     /// @param _tokenId The token id.
     /// @param _tokenURI The tokenURI string.  Typically this will be a link to a json file on IPFS.
-    function setTokenURI(uint256 _tokenId, string _tokenURI) public onlyOwner {
+    function setTokenURI(uint256 _tokenId, string _tokenURI) public whenNotPaused onlyAdministrator {
         _setTokenURI(_tokenId, _tokenURI);
     }
 
