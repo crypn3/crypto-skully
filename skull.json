@@ -1,0 +1,38 @@
+{
+  "attributes": [
+    {
+      "trait_type": "country",
+      "value": "vietnam"
+    },
+    {
+      "trait_type": "eyes",
+      "value": "sleepy"
+    },
+    {
+      "trait_type": "level",
+      "value": 0
+    },
+    {
+      "trait_type": "stamina",
+      "value": 90.2
+    },
+    {
+      "trait_type": "personality",
+      "value": "boring"
+    },
+    {
+      "display_type": "boost_number",
+      "trait_type": "aqua_power",
+      "value": 10
+    },
+    {
+      "display_type": "boost_percentage",
+      "trait_type": "stamina_increase",
+      "value": 5
+    }
+  ],
+  "description": "SKULLY",
+  "external_url": "https://openseacreatures.io/3",
+  "image": "http://ltt-dev.xyz/avatar/1.png",
+  "name": "SKULLY Rank0"
+}
