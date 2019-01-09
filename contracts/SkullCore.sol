@@ -6,6 +6,7 @@ contract SkullCore is SkullAuction {
     // Set in case the core contract is broken and an upgrade is required
     address public newContractAddress;
     event Mint(address _to, uint256 attack, uint256 defend, uint256 rank, uint256 _tokenId);
+    event UpdateSkill(uint256 _id, uint256 _attack, uint256 _defend, uint256 _rank);
 
     constructor () public {
         // Starts paused.
@@ -49,6 +50,19 @@ contract SkullCore is SkullAuction {
         defend = uint256(skull.defend);
         rank = uint256(skull.rank);
         genes = skull.genes;
+    }
+
+    function updateSkill(uint256 _id, uint256 _newAttack, uint256 _newDefend, uint256 _newRank) public whenNotPaused onlyUpdateAddress returns (bool){
+        if (_newAttack > 0) {
+            skulls[_id].attack = uint16(_newAttack);
+        }
+        if (_newDefend > 0) {
+            skulls[_id].defend = uint16(_newDefend);
+        }
+        if (_newRank >= 0) {
+            skulls[_id].rank = uint16(_newRank);
+        }
+        emit UpdateSkill(_id, _newAttack, _newDefend, _newRank);
     }
 
     function unpause() public onlyAdministrator whenPaused {

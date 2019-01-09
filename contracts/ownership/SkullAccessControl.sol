@@ -6,6 +6,7 @@ contract SkullAccessControl {
     // The addresses of the accounts (or contracts) that can execute actions within each roles.
     address public rootAddress;
     address public adminAddress;
+    address public updateAddress;
 
     // @dev Keeps track whether the contract is paused. When that is true, most actions are blocked
     bool public paused = false;
@@ -20,9 +21,19 @@ contract SkullAccessControl {
         _;
     }
 
+    modifier onlyUpdateAddress() {
+        require(msg.sender == updateAddress || msg.sender == rootAddress || msg.sender == adminAddress);
+        _;
+    }
+
     modifier onlyAdministrator() {
         require(msg.sender == rootAddress || msg.sender == adminAddress);
         _;
+    }
+
+    function setUpdateAddress(address _newUpdateAddress) external onlyAdministrator {
+        require(_newUpdateAddress != address(0));
+        updateAddress = _newUpdateAddress;
     }
 
     function setRoot(address _newRoot) external onlyAdministrator {
