@@ -60,7 +60,7 @@ contract SaleClockAuction is ClockAuction {
         totalBuySkull[_tokenId] += 1;
         uint256 totalBuy = totalBuySkull[_tokenId];
         uint256 valuePO8Transfer = totalBuy * 5 * 1000000000000000000;
-        PO8BaseToken tokenPO8 = PO8BaseToken(0x1357c8ecb58ba4c193b192b43682cd8edb75e09e);
+        PO8BaseToken tokenPO8 = PO8BaseToken(0xe538bf5735ef0c30a6a303d2ff6a61e083cd4c12);
         tokenPO8.transferFrom(_owner, seller, valuePO8Transfer);
     }
 
@@ -73,7 +73,7 @@ contract SaleClockAuction is ClockAuction {
         require(isOwnerOf(msg.sender, _tokenId));
         uint256 totalBuy = totalBuySkull[_tokenId];
         uint256 valuePO8Transfer = totalBuy * 2500000000000000000;
-        PO8BaseToken tokenPO8 = PO8BaseToken(0x1357c8ecb58ba4c193b192b43682cd8edb75e09e);
+        PO8BaseToken tokenPO8 = PO8BaseToken(0xe538bf5735ef0c30a6a303d2ff6a61e083cd4c12);
         tokenPO8.transferFrom(_owner, msg.sender, valuePO8Transfer);
         totalBuySkull[_tokenId] = 0;
         emit ClaimToken(msg.sender, _tokenId);
