@@ -99,11 +99,13 @@ contract SkullCore is SkullAuction {
         }
     }
 
-    function mintMany(address _to, uint256[] _tokenIds) public whenNotPaused onlyAdministrator onlyOwner {
-        for (uint256 tokenId = 0; tokenId < _tokenIds.length; tokenId ++) {
+    function mintMany(address _to, uint256 startId, uint256 endId) public whenNotPaused onlyAdministrator onlyOwner {
+        require(startId <= endId);
+        require(endId - startId < 10000);
+        for (uint256 tokenId = startId; tokenId <= endId; tokenId ++) {
             uint16 attack = uint16(randomAttack(tokenId));
             uint16 defend = uint16(randomDefend(tokenId + attack));
-            string memory tokenURI = strConcat("https://api.skullylife.co/skullies/", uint2str(_tokenIds[tokenId]));
+            string memory tokenURI = strConcat("https://api.skullylife.co/skullies/", uint2str(tokenId));
 
             Skull memory _sklObj = Skull({
                 birthTime: uint64(now),
@@ -115,12 +117,12 @@ contract SkullCore is SkullAuction {
 
             // The new Skull is pushed onto the array and minted
             // note that solidity uses 0 as a default value when an item is not found in a mapping
-            if (_allTokensIndex[_tokenIds[tokenId]] == 0) {
-                _mint(_to, _tokenIds[tokenId]);
-                _setTokenURI(_tokenIds[tokenId], tokenURI);
-                _allTokensIndex[_tokenIds[tokenId]] = skulls.length;
+            if (_allTokensIndex[tokenId] == 0) {
+                _mint(_to, tokenId);
+                _setTokenURI(tokenId, tokenURI);
+                _allTokensIndex[tokenId] = skulls.length;
                 skulls.push(_sklObj);
-                emit Mint(_to, attack, defend, 0, _tokenIds[tokenId]);
+                emit Mint(_to, attack, defend, 0, tokenId);
             }
         }
     }
