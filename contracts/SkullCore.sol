@@ -43,7 +43,8 @@ contract SkullCore is SkullAuction {
         uint256 rank,
         uint256 genes
     ) {
-        Skull storage skull = skulls[_id];
+        uint256 skullId = _allTokensIndex[_id];
+        Skull storage skull = skulls[skullId];
 
         birthTime = uint256(skull.birthTime);
         attack = uint256(skull.attack);
@@ -53,16 +54,17 @@ contract SkullCore is SkullAuction {
     }
 
     function updateSkill(uint256 _id, uint256 _newAttack, uint256 _newDefend, uint256 _newRank) public whenNotPaused onlyUpdateAddress returns (bool){
+        uint256 skullId = _allTokensIndex[_id];
         if (_newAttack > 0) {
-            skulls[_id].attack = uint16(_newAttack);
+            skulls[skullId].attack = uint16(_newAttack);
         }
         if (_newDefend > 0) {
-            skulls[_id].defend = uint16(_newDefend);
+            skulls[skullId].defend = uint16(_newDefend);
         }
         if (_newRank >= 0) {
-            skulls[_id].rank = uint16(_newRank);
+            skulls[skullId].rank = uint16(_newRank);
         }
-        emit UpdateSkill(_id, _newAttack, _newDefend, _newRank);
+        emit UpdateSkill(skullId, _newAttack, _newDefend, _newRank);
     }
 
     function unpause() public onlyAdministrator whenPaused {
@@ -77,7 +79,7 @@ contract SkullCore is SkullAuction {
         rootAddress.transfer(address(this).balance);
     }
 
-    function mint(address _to, uint256 _attack, uint256 _defend, uint256 _rank, uint256 _genes, string _tokenURI) public whenNotPaused onlyAdministrator returns (uint256 tokenId) {
+    function mint(address _to, uint256 _attack, uint256 _defend, uint256 _rank, uint256 _genes, string _tokenURI, uint256 tokenId) public whenNotPaused onlyAdministrator {
         Skull memory _sklObj = Skull({
             birthTime: uint64(now),
             attack: uint16(_attack),
@@ -88,11 +90,39 @@ contract SkullCore is SkullAuction {
 
         // The new Skull is pushed onto the array and minted
         // note that solidity uses 0 as a default value when an item is not found in a mapping
+        if (_allTokensIndex[tokenId] == 0) {
+            _mint(_to, tokenId);
+            _setTokenURI(tokenId, _tokenURI);
+            _allTokensIndex[tokenId] = skulls.length;
+            skulls.push(_sklObj);
+            emit Mint(_to, _attack, _defend, _rank, tokenId);
+        }
+    }
 
-        tokenId = skulls.push(_sklObj) - 1;
-        _mint(_to, tokenId);
-        _setTokenURI(tokenId, _tokenURI);
-        emit Mint(_to, _attack, _defend, _rank, tokenId);
+    function mintMany(address _to, uint256[] _tokenIds) public whenNotPaused onlyAdministrator onlyOwner {
+        for (uint256 tokenId = 0; tokenId < _tokenIds.length; tokenId ++) {
+            uint16 attack = uint16(randomAttack(tokenId));
+            uint16 defend = uint16(randomDefend(tokenId + attack));
+            string memory tokenURI = strConcat("https://api.skullylife.co/skullies/", uint2str(_tokenIds[tokenId]));
+
+            Skull memory _sklObj = Skull({
+                birthTime: uint64(now),
+                attack: uint16(attack),
+                defend: uint16(defend),
+                rank: uint16(0),
+                genes: 0
+                });
+
+            // The new Skull is pushed onto the array and minted
+            // note that solidity uses 0 as a default value when an item is not found in a mapping
+            if (_allTokensIndex[_tokenIds[tokenId]] == 0) {
+                _mint(_to, _tokenIds[tokenId]);
+                _setTokenURI(_tokenIds[tokenId], tokenURI);
+                _allTokensIndex[_tokenIds[tokenId]] = skulls.length;
+                skulls.push(_sklObj);
+                emit Mint(_to, attack, defend, 0, _tokenIds[tokenId]);
+            }
+        }
     }
 
     /// @dev setTokenURI(): Set an existing token URI.
@@ -111,6 +141,43 @@ contract SkullCore is SkullAuction {
         } else {
             tokenId = skulls.length - 1;
         }
+    }
+
+    function randomAttack(uint256 index) private view returns (uint8) {
+        return uint8(30 + uint256(keccak256(block.timestamp, block.difficulty, index)) % 60); // random 30-90
+    }
+
+    function randomDefend(uint256 index) private view returns (uint8) {
+        return uint8(30 + uint256(keccak256(block.timestamp, block.difficulty, index)) % 30); // random 30-60
+    }
+
+    function strConcat(string _a, string _b) internal pure returns (string) {
+        bytes memory _ba = bytes(_a);
+        bytes memory _bb = bytes(_b);
+        string memory ab = new string(_ba.length + _bb.length);
+        bytes memory bab = bytes(ab);
+        uint k = 0;
+        for (uint i = 0; i < _ba.length; i++) bab[k++] = _ba[i];
+        for (i = 0; i < _bb.length; i++) bab[k++] = _bb[i];
+
+        return string(bab);
+    }
+
+    function uint2str(uint i) internal pure returns (string){
+        if (i == 0) return "0";
+        uint j = i;
+        uint length;
+        while (j != 0){
+            length++;
+            j /= 10;
+        }
+        bytes memory bstr = new bytes(length);
+        uint k = length - 1;
+        while (i != 0){
+            bstr[k--] = byte(48 + i % 10);
+            i /= 10;
+        }
+        return string(bstr);
     }
 
 }

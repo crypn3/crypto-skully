@@ -15,6 +15,7 @@ contract SkullBase is ERC721Token {
     }
 
     Skull[] skulls;
+    mapping (uint256 => uint256) _allTokensIndex;
 
     function _createSkull(
         uint256 _attack,

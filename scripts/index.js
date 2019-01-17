@@ -4,17 +4,40 @@ const sha1 = require("sha1");
 const originSvg = require('./SKULLY-BANDANA-TEMPLATE-inside-nocolor');
 const { Storage } = require('@google-cloud/storage');
 
+let data = {};
 
-async function generate(text, index) {
+let tmpData = {};
+
+async function generateTest(text, index) {
+    const geo = await GeoPattern.generate(text);
+    let tmpSha = sha1(geo.toString());
+    if (tmpData[tmpSha]) {
+        console.log(text, index);
+    } else {
+        tmpData[tmpSha] = 1;
+    }
+    // if (data[geo.color]) {
+    //     console.log(text, index, geo.color)
+    // } else {
+    //     data[geo.color] = index;
+    // }
+}
+
+async function generate(text, fileName) {
   const geo = await GeoPattern.generate(text);
   const geoStr = geo.toString();
   let modifyStr = originSvg.toString();
   modifyStr = modifyStr.replace('<pattern id="hat"/>', `<pattern id="hat" width="10%" height="10%">${geoStr}</pattern>`);
-
-  let fileName = "images/" + index.toString() + '.svg';
   await fs.writeFileSync(fileName, new Buffer(modifyStr));
   await upFile(fileName);
 }
+
+async function testAddImage(geoStr, fileName) {
+    let modifyStr = originSvg.toString();
+    modifyStr = modifyStr.replace('<pattern id="hat"/>', `<pattern id="hat" width="10%" height="10%">${geoStr}</pattern>`);
+    await fs.writeFileSync(fileName, new Buffer(modifyStr));
+}
+
 
 async function upFile(filename) {
     const storage = new Storage();
@@ -25,10 +48,12 @@ async function upFile(filename) {
 }
 
 async function test() {
+    let scretKey = "SKu11yCrypt0_";
 
-    for (let i = 2; i < 3; i++) {
-        let sha1Str = sha1(i.toString());
-        await generate(sha1Str, i);
+    for (let i = 10000; i < 25001; i++) {
+        let fileName = "images/" + i.toString() + '.svg';
+        let strData = scretKey + i.toString();
+        await generate(strData, fileName);
     }
 }
 
