@@ -2,7 +2,6 @@ pragma solidity >=0.4.24;
 
 import "../SkullCore.sol";
 import "./LocationManagement.sol";
-import "./StringUtils.sol";
 contract SkullFighting{
     /// We need 2 skulls ready to fight
     /// One skull has many location to pin;
