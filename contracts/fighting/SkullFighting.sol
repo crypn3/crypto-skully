@@ -7,7 +7,7 @@ contract SkullFighting{
     /// We need 2 skulls ready to fight
     /// One skull has many location to pin;
     SkullCore public skullCore = SkullCore(0x6D4921f70EF7fA8836B39039f24CC9EfA46694F7);
-    PO8Token public po8 = PO8Token(0xE538Bf5735EF0c30a6A303D2fF6A61E083CD4c12);
+    PO8Token public po8 = PO8Token(0x8744a672D5a2df51Da92B4BAb608CE7ff4Ddd804);
 
     LocationManagement public locationMgmt = LocationManagement(0xaE5c82b1656F8B417301039D8e0f4F6132D0B2E8);
     /// Skull's rank shows the time a Skully can attack in each day.
