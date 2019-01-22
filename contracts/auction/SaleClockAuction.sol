@@ -57,11 +57,13 @@ contract SaleClockAuction is ClockAuction {
         address seller;
         (price, seller) = _bid(_tokenId, msg.value, msg.sender);
         _transfer(msg.sender, _tokenId);
-        totalBuySkull[_tokenId] += 1;
-        uint256 totalBuy = totalBuySkull[_tokenId];
-        uint256 valuePO8Transfer = totalBuy * 5 * 1000000000000000000;
-        PO8BaseToken tokenPO8 = PO8BaseToken(0xe538bf5735ef0c30a6a303d2ff6a61e083cd4c12);
-        tokenPO8.transferFrom(_owner, seller, valuePO8Transfer);
+        if (msg.sender != seller) {
+            totalBuySkull[_tokenId] += 1;
+            uint256 totalBuy = totalBuySkull[_tokenId];
+            uint256 valuePO8Transfer = totalBuy * 5 * 1000000000000000000;
+            PO8BaseToken tokenPO8 = PO8BaseToken(0xe538bf5735ef0c30a6a303d2ff6a61e083cd4c12);
+            tokenPO8.transferFrom(_owner, seller, valuePO8Transfer);
+        }
     }
 
     function getTotalBuyBySkull(uint256 _tokenId) public view returns (uint256) {
