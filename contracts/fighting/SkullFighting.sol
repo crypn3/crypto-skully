@@ -17,7 +17,7 @@ contract SkullFighting{
 
     uint256 public autoAttackFee = 2 finney;
 
-    /// Nearest day the skull have attack action
+    /// Nearest day the skull have an attack action
     mapping (uint256 => uint256) nearestDateAttack;
     // show the total times skull attacks on the current day. Must be < total attack times per day of this skull.
     mapping (uint256 => uint) internal currentAttackTimes;
