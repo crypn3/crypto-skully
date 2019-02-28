@@ -7,7 +7,7 @@ contract SkullBase is ERC721Token {
     event Birth(address owner, uint256 skullyId, uint256 attack, uint256 defend, uint256 rank, uint256 genes);
     struct Skull {
         uint256 genes;
-        // The timestamp from the block when this cat came into existence.
+        // The timestamp from the block when birth
         uint64 birthTime;
         uint16 attack;
         uint16 defend;

@@ -20,7 +20,7 @@ contract SkullCore is SkullAuction {
     }
 
     function setNewAddress(address _v2Address) external onlyAdministrator whenPaused {
-        // See README.md for updgrade plan
+        // See README.md for upgrade plan
         newContractAddress = _v2Address;
         emit ContractUpgrade(_v2Address);
     }

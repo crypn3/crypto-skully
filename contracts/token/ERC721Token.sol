@@ -3,9 +3,8 @@ pragma solidity ^0.4.24;
 import "openzeppelin-solidity/contracts/token/ERC721/ERC721Full.sol";
 import "../ownership/Ownable.sol";
 /// @title Interface for contracts conforming to ERC-721: Non-Fungible Tokens
-/// @author Dieter Shirley <dete@axiomzen.co> (https://github.com/dete)
 
-contract ERC721Token is ERC721Full("SKULLY", "SKL"), Ownable {
+contract ERC721Token is ERC721Full("SKULLY", "SKULL"), Ownable {
     bytes4 constant InterfaceSignature_ERC721 = 0xd37c58cd;
     bytes4 constant InterfaceSignature_ERC721Enumerable = 0xd37e9d63;
     bytes4 constant InterfaceSignature_ERC721Metadata = 0xd37e139f;

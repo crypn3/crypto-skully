@@ -1,4 +1,4 @@
-pragma solidity >=0.4.24;
+pragma solidity ^0.4.24;
 
 import "../SkullCore.sol";
 import "./LocationManagement.sol";
@@ -89,12 +89,12 @@ contract SkullFighting{
 
     /// Game play, Fighting battle of two skulls
     function skullFightWith(uint256 attackId, uint256 _defenceLocationId) internal returns (bool) {
-        require(skullCore.ownerOf(attackId) == msg.sender, "Sender must be the skull's owner!");              
+        require(skullCore.ownerOf(attackId) == msg.sender, "Sender must be the skull's owner!");
 
         uint256 defenceSkullId = locationIdToSkullId[_defenceLocationId]; // Skull ID of enemy
         require(defenceSkullId != attackId, "Skull have to attack on another skull!");
 
-        require(_defenceLocationId < locationMgmt.getTotalLocations(), "The ID location must less than total locations of Map"); // The ID location must less than total locations of Map 
+        require(_defenceLocationId < locationMgmt.getTotalLocations(), "The ID location must less than total locations of Map"); // The ID location must less than total locations of Map
 
         uint256 attackPower; // Attack power of user's skull
         uint256 defencePower; // Defence power of the enemy
@@ -109,7 +109,7 @@ contract SkullFighting{
             setLocationToSkull(attackId, defenceLocation.latitude, defenceLocation.longitude, _defenceLocationId);
             emit Battle(msg.sender, attackId, defenceSkullId, true);
             return true;
-        }     
+        }
         /// attack to the location with the enemy
         else
         {
@@ -150,19 +150,19 @@ contract SkullFighting{
     }
 
     // condition of skull can attack with time between 0 - maximum attack times per day.
-    function canAttack(uint256 skullId) internal returns(bool) { 
+    function canAttack(uint256 skullId) internal returns(bool) {
         // set begin time of new skull
         if(nearestDateAttack[skullId] == 0)
         {
             setBeginTimeOfSkull(skullId);
         }
 
-        // if current day is a new day, user reset their attack times by themself 
+        // if current day is a new day, user reset their attack times by themself
         uint256 subTime = now * 1000 - nearestDateAttack[skullId];
         if(subTime > 86400000) {
             resetAttackTimes(skullId, subTime);
         }
-        
+
         // check current attack times on this day.
         if (currentAttackTimes[skullId] >= 0 && currentAttackTimes[skullId] < getMaximumAttackTimesPerDay(skullId)) {
             return true;
@@ -170,7 +170,7 @@ contract SkullFighting{
         return false;
     }
 
-    // get maximum attack times of skull base-on its rank 
+    // get maximum attack times of skull base-on its rank
     function getMaximumAttackTimesPerDay(uint256 skullId) public view returns (uint) {
         uint skullRank;
         (,,,skullRank,) = skullCore.getSkull(skullId);

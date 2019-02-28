@@ -6,7 +6,7 @@ import "../token/PO8BaseToken.sol";
 /// @notice We omit a fallback function to prevent accidental sends to this contract.
 contract SaleClockAuction is ClockAuction {
 
-    // @dev Sanity check that allows us to ensure that we are pointing to the
+    // @dev Hoank check that allows us to ensure that we are pointing to the
     //  right auction in our setSaleAuctionAddress() call.
     bool public isSaleClockAuction = true;
     mapping (uint256 => uint256) totalBuySkull;
@@ -30,7 +30,7 @@ contract SaleClockAuction is ClockAuction {
         uint256 _duration,
         address _seller
     ) external {
-        // Sanity check that no inputs overflow how many bits we've allocated
+        // Hoank check that no inputs overflow how many bits we've allocated
         // to store them in the auction struct.
         require(_startingPrice == uint256(uint128(_startingPrice)));
         require(_endingPrice == uint256(uint128(_endingPrice)));

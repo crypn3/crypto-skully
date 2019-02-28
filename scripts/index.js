@@ -50,7 +50,7 @@ async function upFile(filename) {
 async function test() {
     let scretKey = "SKu11yCrypt0_";
 
-    for (let i = 10000; i < 25001; i++) {
+    for (let i = 1; i < 100; i++) {
         let fileName = "images/" + i.toString() + '.svg';
         let strData = scretKey + i.toString();
         await generate(strData, fileName);

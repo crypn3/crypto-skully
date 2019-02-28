@@ -1,4 +1,4 @@
-pragma solidity >=0.4.24;
+pragma solidity ^0.4.24;
 
 contract LocationManagement{
 
@@ -13,12 +13,12 @@ contract LocationManagement{
         emit TransferOwnership(msg.sender, _newManager);
         return true;
     }
-    
+
     struct Location{
         uint64 latitude;
         uint64 longitude;
     }
-    
+
     Location[] locations;
 
     event SetNewLocation(uint256 _newLocationId, uint64 _lat, uint64 _long);
@@ -45,7 +45,7 @@ contract LocationManagement{
             uint256 _newLocationId = locations.length - 1; /// Id of new location
             emit SetNewLocation(_newLocationId, _arrLat[i], _arrLong[i]);
         }
-        
+
     }
 
     function updateLocationInfo(uint256 _locationId, uint64 _newLat, uint64 _newLong) external onlyManager {
