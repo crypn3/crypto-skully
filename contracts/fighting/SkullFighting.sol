@@ -1,4 +1,27 @@
-pragma solidity >=0.4.24;
+pragma solidity ^0.4.24;
+
+/**
+ * @title - Crypto Skylly
+ *  ________       ___  __        ___  ___      ___           ___            ___    ___
+ * |\   ____\     |\  \|\  \     |\  \|\  \    |\  \         |\  \          |\  \  /  /|
+ * \ \  \___|_    \ \  \/  /|_   \ \  \\\  \   \ \  \        \ \  \         \ \  \/  / /
+ *  \ \_____  \    \ \   ___  \   \ \  \\\  \   \ \  \        \ \  \         \ \    / /
+ *   \|____|\  \    \ \  \\ \  \   \ \  \\\  \   \ \  \____    \ \  \____     \/  /  /
+ *     ____\_\  \    \ \__\\ \__\   \ \_______\   \ \_______\   \ \_______\ __/  / /
+ *    |\_________\    \|__| \|__|    \|_______|    \|_______|    \|_______||\___/ /
+ *    \|_________|                                                         \|___|/
+ *
+ * ---
+ *
+ * POWERED BY
+ *    ____                  _          _   _ _____ _ _
+ *  / ___|_ __ _   _ _ __ | |_ ___   | \ | |___ /| | |
+ * | |   | '__| | | | '_ \| __/ _ \  |  \| | |_ \| | |
+ * | |___| |  | |_| | |_) | || (_) | | |\  |___) |_|_|
+ *  \____|_|   \__, | .__/ \__\___/  |_| \_|____/(_|_)
+ *             |___/|_|
+ *
+ **/
 
 import "../SkullCore.sol";
 import "./LocationManagement.sol";
@@ -26,7 +49,7 @@ contract SkullFighting{
     mapping (uint256 => uint64) internal totalSuccessAttacks;
 
     event Battle(address owner, uint256 attackId, uint256 defenceId, uint64 lat, uint64 long, bool win);
-    
+
     event BeginTimeOfSkull(uint256 _skullId, uint256 _time);
     event ResetAttackTimes(uint256 _skullId, uint256 _time);
 
@@ -35,17 +58,17 @@ contract SkullFighting{
         uint64 latitude;
         uint64 longitude;
     }
-    
+
 
     /// Game play, Fighting battle of two skulls
     function skullFightWith(uint256 attackId, uint256 _defenceLocationId) internal returns (bool) {
-        require(skullCore.ownerOf(attackId) == msg.sender, "Sender must be the skull's owner!");              
+        require(skullCore.ownerOf(attackId) == msg.sender, "Sender must be the skull's owner!");
 
         uint256 defenceSkullId;
         (defenceSkullId,,) = locationMgmt.getLocationInfo(_defenceLocationId); // Skull ID of enemy
         require(defenceSkullId != attackId, "Skull have to attack on another skull!");
 
-        require(_defenceLocationId < locationMgmt.getTotalLocations(), "The ID location must less than total locations of Map"); // The ID location must less than total locations of Map 
+        require(_defenceLocationId < locationMgmt.getTotalLocations(), "The ID location must less than total locations of Map"); // The ID location must less than total locations of Map
 
         uint256 attackPower; // Attack power of user's skull
         uint256 defencePower; // Defence power of the enemy
@@ -60,7 +83,7 @@ contract SkullFighting{
             locationMgmt.setLocationToSkull(attackId, defenceLocation.latitude, defenceLocation.longitude, _defenceLocationId);
             emit Battle(msg.sender, attackId, defenceSkullId, defenceLocation.latitude, defenceLocation.longitude, true);
             return true;
-        }     
+        }
         /// attack to the location with the enemy
         else
         {
@@ -102,19 +125,19 @@ contract SkullFighting{
     }
 
     // condition of skull can attack with time between 0 - maximum attack times per day.
-    function canAttack(uint256 skullId) internal returns(bool) { 
+    function canAttack(uint256 skullId) internal returns(bool) {
         // set begin time of new skull
         if(nearestDateAttack[skullId] == 0)
         {
             setBeginTimeOfSkull(skullId);
         }
 
-        // if current day is a new day, user reset their attack times by themself 
+        // if current day is a new day, user reset their attack times by themself
         uint256 subTime = now * 1000 - nearestDateAttack[skullId];
         if(subTime > 86400000) {
             resetAttackTimes(skullId, subTime);
         }
-        
+
         // check current attack times on this day.
         if (currentAttackTimes[skullId] >= 0 && currentAttackTimes[skullId] < getMaximumAttackTimesPerDay(skullId)) {
             return true;
@@ -122,7 +145,7 @@ contract SkullFighting{
         return false;
     }
 
-    // get maximum attack times of skull base-on its rank 
+    // get maximum attack times of skull base-on its rank
     function getMaximumAttackTimesPerDay(uint256 skullId) public view returns (uint) {
         uint skullRank;
         (,,,skullRank,) = skullCore.getSkull(skullId);

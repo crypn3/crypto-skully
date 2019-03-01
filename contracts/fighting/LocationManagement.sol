@@ -1,4 +1,5 @@
-pragma solidity >=0.4.24;
+pragma solidity ^0.4.24;
+
 contract MapOwner{
     address public manager; // address of admin
     address public CEO;
