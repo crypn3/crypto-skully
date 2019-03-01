@@ -21,6 +21,7 @@ pragma solidity ^0.4.24;
  *  \____|_|   \__, | .__/ \__\___/  |_| \_|____/(_|_)
  *             |___/|_|
  *
+ * Game at https://skullylife.co/
  **/
 
 import "./auction/SkullAuction.sol";
