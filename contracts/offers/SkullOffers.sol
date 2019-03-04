@@ -9,27 +9,6 @@ import "./OffersBase.sol";
 /// @notice This generic contract interfaces with any ERC-721 compliant contract
 contract SkullOffers is OffersBase {
 
-    // This is the main Offers contract. In order to keep our code separated into logical sections,
-    // we've broken it up into multiple files using inheritance. This allows us to keep related code
-    // collocated while still avoiding a single large file, which would be harder to maintain. The breakdown
-    // is as follows:
-    //
-    //      - OffersBase: This contract defines the fundamental code that the main contract uses.
-    //              This includes our main data storage, data types, events, and internal functions for
-    //              managing offers in their lifecycle.
-    //
-    //      - OffersConfig: This contract manages the various configuration values that determine the
-    //              details of the offers that get created, cancelled, overbid, expired, and fulfilled,
-    //              as well as the fee structure that the offers will be operating with.
-    //
-    //      - OffersAccessControl: This contract manages the various addresses and constraints for
-    //              operations that can be executed only by specific roles. The roles are: CEO, CFO,
-    //              COO, and LostAndFound. Additionally, this contract exposes functions for the CFO
-    //              to withdraw earnings and the LostAndFound account to withdraw any lost funds.
-
-    /// @dev The ERC-165 interface signature for ERC-721.
-    ///  Ref: https://github.com/ethereum/EIPs/issues/165
-    ///  Ref: https://github.com/ethereum/EIPs/issues/721
     bytes4 constant InterfaceSignature_ERC721 = bytes4(0xd37c58cd);
 
     // Reference to contract tracking NFT ownership
@@ -37,7 +16,7 @@ contract SkullOffers is OffersBase {
 
     /// @notice Creates the main Offers smart contract instance and sets initial configuration values
     /// @param _nftAddress The address of the ERC-721 contract managing NFT ownership
-    /// @param _cooAddress The address of the COO to set
+    /// @param _adminAddress The address of the Admin to set
     /// @param _globalDuration The initial globalDuration value to set
     /// @param _minimumTotalValue The initial minimumTotalValue value to set
     /// @param _minimumPriceIncrement The initial minimumPriceIncrement value to set
@@ -45,22 +24,22 @@ contract SkullOffers is OffersBase {
     /// @param _offerCut The initial offerCut value to set
     constructor(
         address _nftAddress,
-        address _cooAddress,
+        address _adminAddress,
         uint256 _globalDuration,
         uint256 _minimumTotalValue,
         uint256 _minimumPriceIncrement,
         uint256 _unsuccessfulFee,
         uint256 _offerCut
     ) public {
-        // The creator of the contract is the ceo
-        ceoAddress = msg.sender;
+        // The creator of the contract is the root
+        rootAddress = msg.sender;
 
         // Get reference of the address of the NFT contract
         ERC721Token candidateContract = ERC721Token(_nftAddress);
         require(candidateContract.supportsInterface(InterfaceSignature_ERC721), "NFT Contract needs to support ERC721 Interface");
         nonFungibleContract = candidateContract;
 
-        setCOO(_cooAddress);
+        setAdmin(_adminAddress);
 
         // Set initial claw-figuration values
         globalDuration = _globalDuration;
@@ -109,12 +88,12 @@ contract SkullOffers is OffersBase {
                 require(offerPrice >= minimumOverbidPrice, "overbid price must match minimum price increment criteria");
             }
 
-            uint256 cfoEarnings = previousOffer.unsuccessfulFee;
+            uint256 rootEarnings = previousOffer.unsuccessfulFee;
             // Bidder gets refund: T - flat fee
             // The in-fur-ior offer gets refunded for free, how nice.
-            toRefund = previousOfferTotal - cfoEarnings;
+            toRefund = previousOfferTotal - rootEarnings;
 
-            totalCFOEarnings += cfoEarnings;
+            totalRootEarnings += rootEarnings;
         }
 
         uint256 newExpiresAt = now + globalDuration;
@@ -170,15 +149,15 @@ contract SkullOffers is OffersBase {
 
         // T
         uint256 total = uint256(offer.total);
-        // P = T - S; Bidder gets all of P, CFO gets all of T - P
+        // P = T - S; Bidder gets all of P, Root gets all of T - P
         uint256 toRefund = _computeOfferPrice(total, offer.offerCut);
-        uint256 cfoEarnings = total - toRefund;
+        uint256 rootEarnings = total - toRefund;
 
         // Remove offer from storage
         delete tokenIdToOffer[_tokenId];
 
-        // Add to CFO's balance
-        totalCFOEarnings += cfoEarnings;
+        // Add to Root's balance
+        totalRootEarnings += rootEarnings;
 
         // Transfer money in escrow back to bidder
         _tryPushFunds(_tokenId, bidder, toRefund);
@@ -187,7 +166,7 @@ contract SkullOffers is OffersBase {
             _tokenId,
             bidder,
             toRefund,
-            cfoEarnings
+            rootEarnings
         );
     }
 
@@ -218,7 +197,7 @@ contract SkullOffers is OffersBase {
         // Get the owner of the token
         address owner = nonFungibleContract.ownerOf(_tokenId);
 
-        require(msg.sender == cooAddress || msg.sender == owner, "only COO or the owner can fulfill order");
+        require(msg.sender == adminAddress || msg.sender == owner, "only Admin or the owner can fulfill order");
 
         // T
         uint256 total = uint256(offer.total);
@@ -238,9 +217,9 @@ contract SkullOffers is OffersBase {
         nonFungibleContract.transferFrom(owner, bidder, _tokenId);
 
         // NFT has been transferred! Now calculate fees and transfer fund to the owner
-        // T - P, the CFO's earnings
-        uint256 cfoEarnings = total - offerPrice;
-        totalCFOEarnings += cfoEarnings;
+        // T - P, the Root's earnings
+        uint256 rootEarnings = total - offerPrice;
+        totalRootEarnings += rootEarnings;
 
         // Transfer money in escrow to owner
         _tryPushFunds(_tokenId, owner, offerPrice);
@@ -250,7 +229,7 @@ contract SkullOffers is OffersBase {
             bidder,
             owner,
             offerPrice,
-            cfoEarnings
+            rootEarnings
         );
     }
 
@@ -263,7 +242,7 @@ contract SkullOffers is OffersBase {
         uint256 len = _tokenIds.length;
 
         // Use temporary accumulator
-        uint256 cumulativeCFOEarnings = 0;
+        uint256 cumulativeRootEarnings = 0;
 
         for (uint256 i = 0; i < len; i++) {
             uint256 tokenId = _tokenIds[i];
@@ -282,17 +261,17 @@ contract SkullOffers is OffersBase {
             // Get a reference of the bidder address before removing offer from storage
             address bidder = offer.bidder;
 
-            // CFO gets the flat fee
-            uint256 cfoEarnings = uint256(offer.unsuccessfulFee);
+            // Root gets the flat fee
+            uint256 rootEarnings = uint256(offer.unsuccessfulFee);
 
             // Bidder gets refund: T - flat
-            uint256 toRefund = uint256(offer.total) - cfoEarnings;
+            uint256 toRefund = uint256(offer.total) - rootEarnings;
 
             // Ensure the previous offer has been removed before refunding
             delete tokenIdToOffer[tokenId];
 
-            // Add to cumulative balance of CFO's earnings
-            cumulativeCFOEarnings += cfoEarnings;
+            // Add to cumulative balance of Root's earnings
+            cumulativeRootEarnings += rootEarnings;
 
             // Finally, sending funds to this bidder. If failed, the fund will be kept in escrow
             // under lostAndFound's address
@@ -306,13 +285,13 @@ contract SkullOffers is OffersBase {
                 tokenId,
                 bidder,
                 toRefund,
-                cfoEarnings
+                rootEarnings
             );
         }
 
-        // Add to CFO's balance if any expired offer has been removed
-        if (cumulativeCFOEarnings > 0) {
-            totalCFOEarnings += cumulativeCFOEarnings;
+        // Add to Root's balance if any expired offer has been removed
+        if (cumulativeRootEarnings > 0) {
+            totalRootEarnings += cumulativeRootEarnings;
         }
     }
 

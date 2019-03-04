@@ -4,17 +4,12 @@ pragma solidity ^0.4.24;
 
 contract OffersAccessControl {
 
-    // The address of the account that can replace ceo, coo, cfo, lostAndFound
-    address public ceoAddress;
-    // The address of the account that can adjust configuration variables and fulfill offer
-    address public cooAddress;
-    // The address of the CFO account that receives all the fees
-    address public cfoAddress;
-    // The address where funds of failed "push"es go to
+    address public rootAddress;
+    address public adminAddress;
     address public lostAndFoundAddress;
 
-    // The total amount of ether (in wei) in escrow owned by CFO
-    uint256 public totalCFOEarnings;
+    // The total amount of ether (in wei) in escrow owned by Root
+    uint256 public totalRootEarnings;
     // The total amount of ether (in wei) in escrow owned by lostAndFound
     uint256 public totalLostAndFoundBalance;
 
@@ -23,37 +18,27 @@ contract OffersAccessControl {
     ///  and all whenNotFrozen actions will be blocked.
     bool public frozen = false;
 
-    /// @notice Access modifier for CEO-only functionality
-    modifier onlyCEO() {
-        require(msg.sender == ceoAddress, "only CEO is allowed to perform this operation");
+    /// @notice Access modifier for Root-only functionality
+    modifier onlyRoot() {
+        require(msg.sender == rootAddress, "only Root is allowed to perform this operation");
         _;
     }
 
-    /// @notice Access modifier for COO-only functionality
-    modifier onlyCOO() {
-        require(msg.sender == cooAddress, "only COO is allowed to perform this operation");
+    /// @notice Access modifier for Admin-only functionality
+    modifier onlyAdmin() {
+        require(msg.sender == adminAddress, "only Admin is allowed to perform this operation");
         _;
     }
 
-    /// @notice Access modifier for CFO-only functionality
-    modifier onlyCFO() {
-        require(
-            msg.sender == cfoAddress &&
-            msg.sender != address(0),
-            "only CFO is allowed to perform this operation"
-        );
-        _;
-    }
-
-    /// @notice Access modifier for CEO-only or CFO-only functionality
-    modifier onlyCeoOrCfo() {
+    /// @notice Access modifier for Admin-only or Root-only functionality
+    modifier onlyAdminOrRoot() {
         require(
             msg.sender != address(0) &&
         (
-        msg.sender == ceoAddress ||
-        msg.sender == cfoAddress
+        msg.sender == adminAddress ||
+        msg.sender == rootAddress
         ),
-            "only CEO or CFO is allowed to perform this operation"
+            "only Admin or Root is allowed to perform this operation"
         );
         _;
     }
@@ -68,40 +53,34 @@ contract OffersAccessControl {
         _;
     }
 
-    /// @notice Assigns a new address to act as the CEO. Only available to the current CEO.
-    /// @param _newCEO The address of the new CEO
-    function setCEO(address _newCEO) external onlyCEO {
-        require(_newCEO != address(0), "new CEO address cannot be the zero-account");
-        ceoAddress = _newCEO;
+    /// @notice Assigns a new address to act as the Admin. Only available to the current Admin or Root.
+    /// @param _newAdmin The address of the new Admin
+    function setAdmin(address _newAdmin) public onlyAdminOrRoot {
+        require(_newAdmin != address(0), "new Admin address cannot be the zero-account");
+        adminAddress = _newAdmin;
     }
 
-    /// @notice Assigns a new address to act as the COO. Only available to the current CEO.
-    /// @param _newCOO The address of the new COO
-    function setCOO(address _newCOO) public onlyCEO {
-        require(_newCOO != address(0), "new COO address cannot be the zero-account");
-        cooAddress = _newCOO;
+
+    /// @notice Assigns a new address to act as the Root. Only available to the current Root.
+    /// @param _newRoot The address of the new Root
+    function setRoot(address _newRoot) external onlyRoot {
+        require(_newRoot != address(0), "new Root address cannot be the zero-account");
+        rootAddress = _newRoot;
     }
 
-    /// @notice Assigns a new address to act as the CFO. Only available to the current CEO.
-    /// @param _newCFO The address of the new CFO
-    function setCFO(address _newCFO) external onlyCEO {
-        require(_newCFO != address(0), "new CFO address cannot be the zero-account");
-        cfoAddress = _newCFO;
-    }
-
-    /// @notice Assigns a new address to act as the LostAndFound account. Only available to the current CEO.
+    /// @notice Assigns a new address to act as the LostAndFound account. Only available to the current Root
     /// @param _newLostAndFound The address of the new lostAndFound address
-    function setLostAndFound(address _newLostAndFound) external onlyCEO {
+    function setLostAndFound(address _newLostAndFound) external onlyRoot {
         require(_newLostAndFound != address(0), "new lost and found cannot be the zero-account");
         lostAndFoundAddress = _newLostAndFound;
     }
 
-    /// @notice CFO withdraws the CFO earnings
-    function withdrawTotalCFOEarnings() external onlyCFO {
+    /// @notice Root withdraws the Root earnings
+    function withdrawTotalRootEarnings() external onlyRoot {
         // Obtain reference
-        uint256 balance = totalCFOEarnings;
-        totalCFOEarnings = 0;
-        cfoAddress.transfer(balance);
+        uint256 balance = totalRootEarnings;
+        totalRootEarnings = 0;
+        rootAddress.transfer(balance);
     }
 
     /// @notice LostAndFound account withdraws all the lost and found amount
@@ -124,12 +103,9 @@ contract OffersAccessControl {
         _;
     }
 
-    /// @notice Called by CEO or CFO role to freeze the contract.
-    ///  Only intended to be used if a serious exploit is detected.
-    /// @notice Allow two C-level roles to call this function in case either CEO or CFO key is compromised.
-    /// @notice This is a one-way process; there is no un-freezing.
+    /// @notice Called by Root or Admin role to freeze the contract.
     /// @dev A frozen contract will be frozen forever, there's no way to undo this action.
-    function freeze() external onlyCeoOrCfo whenNotFrozen {
+    function freeze() external onlyAdminOrRoot whenNotFrozen {
         frozen = true;
     }
 }
@@ -1143,20 +1119,20 @@ contract OffersConfig is OffersAccessControl {
 
     /// @notice Sets the minimumTotalValue value. This would impact offers created after this has been set, but
     ///  not existing offers.
-    /// @notice Only callable by COO, when not frozen.
+    /// @notice Only callable by Admin or Root, when not frozen.
     /// @param _newMinTotal The minimumTotalValue value to set
-    function setMinimumTotalValue(uint256 _newMinTotal) external onlyCOO whenNotFrozen {
+    function setMinimumTotalValue(uint256 _newMinTotal) external onlyAdminOrRoot whenNotFrozen {
         _setMinimumTotalValue(_newMinTotal, unsuccessfulFee);
         emit MinimumTotalValueUpdated(_newMinTotal);
     }
 
     /// @notice Sets the globalDuration value. All offers that are created or updated will compute a new expiration
     ///  time based on this.
-    /// @notice Only callable by COO, when not frozen.
+    /// @notice Only callable by Admin or Root, when not frozen.
     /// @dev Need to check for underflow since function argument is 256 bits, and the offer expiration time is
     ///  packed into 64 bits in the Offer struct.
     /// @param _newDuration The globalDuration value to set.
-    function setGlobalDuration(uint256 _newDuration) external onlyCOO whenNotFrozen {
+    function setGlobalDuration(uint256 _newDuration) external onlyAdminOrRoot whenNotFrozen {
         require(_newDuration == uint256(uint64(_newDuration)), "new globalDuration value must not underflow");
         globalDuration = _newDuration;
         emit GlobalDurationUpdated(_newDuration);
@@ -1164,10 +1140,10 @@ contract OffersConfig is OffersAccessControl {
 
     /// @notice Sets the offerCut value. All offers will compute a fee taken by this contract based on this
     ///  configuration.
-    /// @notice Only callable by COO, when not frozen.
+    /// @notice Only callable by Admin or Root, when not frozen.
     /// @dev As this configuration is a basis point, the value to set must be less than or equal to 10000.
     /// @param _newOfferCut The offerCut value to set.
-    function setOfferCut(uint256 _newOfferCut) external onlyCOO whenNotFrozen {
+    function setOfferCut(uint256 _newOfferCut) external onlyAdminOrRoot whenNotFrozen {
         _setOfferCut(_newOfferCut);
         emit OfferCutUpdated(_newOfferCut);
     }
@@ -1179,9 +1155,9 @@ contract OffersConfig is OffersAccessControl {
     ///  existence of offers that, when overbid or expired, would result in the main contract taking too big of a cut.
     ///  In the case of a sufficiently low offer price, eg. the same as unsuccessfulFee, the most the main contract can
     ///  ever take is simply the amount of unsuccessfulFee.
-    /// @notice Only callable by COO, when not frozen.
+    /// @notice Only callable by Admin or Root, when not frozen.
     /// @param _newUnsuccessfulFee The unsuccessfulFee value to set.
-    function setUnsuccessfulFee(uint256 _newUnsuccessfulFee) external onlyCOO whenNotFrozen {
+    function setUnsuccessfulFee(uint256 _newUnsuccessfulFee) external onlyAdminOrRoot whenNotFrozen {
         require(minimumTotalValue >= (2 * _newUnsuccessfulFee), "unsuccessful value must be <= half of minimumTotalValue");
         unsuccessfulFee = _newUnsuccessfulFee;
         emit UnsuccessfulFeeUpdated(_newUnsuccessfulFee);
@@ -1189,10 +1165,10 @@ contract OffersConfig is OffersAccessControl {
 
     /// @notice Sets the minimumPriceIncrement value. All offers that are overbid must have a price greater
     ///  than the minimum increment computed from this basis point.
-    /// @notice Only callable by COO, when not frozen.
+    /// @notice Only callable by Admin or Root, when not frozen.
     /// @dev As this configuration is a basis point, the value to set must be less than or equal to 10000.
     /// @param _newMinimumPriceIncrement The minimumPriceIncrement value to set.
-    function setMinimumPriceIncrement(uint256 _newMinimumPriceIncrement) external onlyCOO whenNotFrozen {
+    function setMinimumPriceIncrement(uint256 _newMinimumPriceIncrement) external onlyAdmin whenNotFrozen {
         _setMinimumPriceIncrement(_newMinimumPriceIncrement);
         emit MinimumPriceIncrementUpdated(_newMinimumPriceIncrement);
     }
@@ -1252,7 +1228,7 @@ contract OffersBase is OffersConfig {
     /// @param tokenId The token id that the cancelled offer was offering to buy.
     /// @param bidder The creator of the offer.
     /// @param bidderReceived The eth amount that the bidder received as refund.
-    /// @param fee The eth amount that CFO received as the fee for the cancellation.
+    /// @param fee The eth amount that Root received as the fee for the cancellation.
     event OfferCancelled(
         uint256 tokenId,
         address bidder,
@@ -1266,7 +1242,7 @@ contract OffersBase is OffersConfig {
     /// @param bidder The creator of the offer.
     /// @param owner The original owner of the token who accepted the offer.
     /// @param ownerReceived The eth amount that the original owner received from the offer
-    /// @param fee The eth amount that CFO received as the fee for the successfully fulfilling.
+    /// @param fee The eth amount that Root received as the fee for the successfully fulfilling.
     event OfferFulfilled(
         uint256 tokenId,
         address bidder,
@@ -1294,7 +1270,7 @@ contract OffersBase is OffersConfig {
     /// @param tokenId The token id that the removed offer was offering to buy
     /// @param bidder The creator of the offer.
     /// @param bidderReceived The eth amount that the bidder received from the offer.
-    /// @param fee The eth amount that CFO received as the fee.
+    /// @param fee The eth amount that Root received as the fee.
     event ExpiredOfferRemoved(
         uint256 tokenId,
         address bidder,
@@ -1334,14 +1310,10 @@ contract OffersBase is OffersConfig {
         // Bidder The creator of the offer
         address bidder;
         // Offer cut in basis points, which ranges from 0-10000.
-        // It's the cut that CFO takes when the offer is successfully accepted by the owner.
-        // This is stored in the offer struct so that it won't be changed if COO updates
-        // the `offerCut` for new offers.
         uint16 offerCut;
         // Total value (in wei) a bidder sent in msg.value to create the offer
         uint128 total;
-        // Fee (in wei) that CFO takes when the offer is expired or overbid.
-        // This is stored in the offer struct so that it won't be changed if COO updates
+        // Fee (in wei) that Admin takes when the offer is expired or overbid.
         // the `unsuccessfulFee` for new offers.
         uint128 unsuccessfulFee;
     }
@@ -1367,7 +1339,7 @@ contract OffersBase is OffersConfig {
     /// @dev This is safe against overflow because msg.value and the total supply of ether is capped within 128 bits.
     /// @param _total The total value of the offer. Also is the msg.value that the bidder sent when
     ///  creating the offer.
-    /// @param _offerCut The percentage in basis points that will be taken by the CFO if the offer is fulfilled.
+    /// @param _offerCut The percentage in basis points that will be taken by the Admin if the offer is fulfilled.
     /// @return The offer price that the owner will receive if the offer is fulfilled.
     function _computeOfferPrice(uint256 _total, uint256 _offerCut) internal pure returns (uint256) {
         return _total * 1e4 / (1e4 + _offerCut);
@@ -1421,27 +1393,6 @@ contract OffersBase is OffersConfig {
 /// @notice This generic contract interfaces with any ERC-721 compliant contract
 contract SkullOffers is OffersBase {
 
-    // This is the main Offers contract. In order to keep our code separated into logical sections,
-    // we've broken it up into multiple files using inheritance. This allows us to keep related code
-    // collocated while still avoiding a single large file, which would be harder to maintain. The breakdown
-    // is as follows:
-    //
-    //      - OffersBase: This contract defines the fundamental code that the main contract uses.
-    //              This includes our main data storage, data types, events, and internal functions for
-    //              managing offers in their lifecycle.
-    //
-    //      - OffersConfig: This contract manages the various configuration values that determine the
-    //              details of the offers that get created, cancelled, overbid, expired, and fulfilled,
-    //              as well as the fee structure that the offers will be operating with.
-    //
-    //      - OffersAccessControl: This contract manages the various addresses and constraints for
-    //              operations that can be executed only by specific roles. The roles are: CEO, CFO,
-    //              COO, and LostAndFound. Additionally, this contract exposes functions for the CFO
-    //              to withdraw earnings and the LostAndFound account to withdraw any lost funds.
-
-    /// @dev The ERC-165 interface signature for ERC-721.
-    ///  Ref: https://github.com/ethereum/EIPs/issues/165
-    ///  Ref: https://github.com/ethereum/EIPs/issues/721
     bytes4 constant InterfaceSignature_ERC721 = bytes4(0xd37c58cd);
 
     // Reference to contract tracking NFT ownership
@@ -1449,7 +1400,7 @@ contract SkullOffers is OffersBase {
 
     /// @notice Creates the main Offers smart contract instance and sets initial configuration values
     /// @param _nftAddress The address of the ERC-721 contract managing NFT ownership
-    /// @param _cooAddress The address of the COO to set
+    /// @param _adminAddress The address of the Admin to set
     /// @param _globalDuration The initial globalDuration value to set
     /// @param _minimumTotalValue The initial minimumTotalValue value to set
     /// @param _minimumPriceIncrement The initial minimumPriceIncrement value to set
@@ -1457,22 +1408,22 @@ contract SkullOffers is OffersBase {
     /// @param _offerCut The initial offerCut value to set
     constructor(
         address _nftAddress,
-        address _cooAddress,
+        address _adminAddress,
         uint256 _globalDuration,
         uint256 _minimumTotalValue,
         uint256 _minimumPriceIncrement,
         uint256 _unsuccessfulFee,
         uint256 _offerCut
     ) public {
-        // The creator of the contract is the ceo
-        ceoAddress = msg.sender;
+        // The creator of the contract is the root
+        rootAddress = msg.sender;
 
         // Get reference of the address of the NFT contract
         ERC721Token candidateContract = ERC721Token(_nftAddress);
         require(candidateContract.supportsInterface(InterfaceSignature_ERC721), "NFT Contract needs to support ERC721 Interface");
         nonFungibleContract = candidateContract;
 
-        setCOO(_cooAddress);
+        setAdmin(_adminAddress);
 
         // Set initial claw-figuration values
         globalDuration = _globalDuration;
@@ -1514,19 +1465,19 @@ contract SkullOffers is OffersBase {
             // plus a minimum required increment (minimumOverbidPrice).
             // We calculate the previous offer's price, the corresponding minimumOverbidPrice, and check if the
             // new offerPrice is greater than or equal to the minimumOverbidPrice
-            // The owner is fur-tunate to have such a desirable kitty
+            // The owner is fur-tunate to have such a desirable skully
             if (_isOfferActive(previousExpiresAt)) {
                 uint256 previousPriceForOwner = _computeOfferPrice(previousOfferTotal, uint256(previousOffer.offerCut));
                 uint256 minimumOverbidPrice = _computeMinimumOverbidPrice(previousPriceForOwner);
                 require(offerPrice >= minimumOverbidPrice, "overbid price must match minimum price increment criteria");
             }
 
-            uint256 cfoEarnings = previousOffer.unsuccessfulFee;
+            uint256 rootEarnings = previousOffer.unsuccessfulFee;
             // Bidder gets refund: T - flat fee
             // The in-fur-ior offer gets refunded for free, how nice.
-            toRefund = previousOfferTotal - cfoEarnings;
+            toRefund = previousOfferTotal - rootEarnings;
 
-            totalCFOEarnings += cfoEarnings;
+            totalRootEarnings += rootEarnings;
         }
 
         uint256 newExpiresAt = now + globalDuration;
@@ -1582,15 +1533,15 @@ contract SkullOffers is OffersBase {
 
         // T
         uint256 total = uint256(offer.total);
-        // P = T - S; Bidder gets all of P, CFO gets all of T - P
+        // P = T - S; Bidder gets all of P, Root gets all of T - P
         uint256 toRefund = _computeOfferPrice(total, offer.offerCut);
-        uint256 cfoEarnings = total - toRefund;
+        uint256 rootEarnings = total - toRefund;
 
         // Remove offer from storage
         delete tokenIdToOffer[_tokenId];
 
-        // Add to CFO's balance
-        totalCFOEarnings += cfoEarnings;
+        // Add to Root's balance
+        totalRootEarnings += rootEarnings;
 
         // Transfer money in escrow back to bidder
         _tryPushFunds(_tokenId, bidder, toRefund);
@@ -1599,7 +1550,7 @@ contract SkullOffers is OffersBase {
             _tokenId,
             bidder,
             toRefund,
-            cfoEarnings
+            rootEarnings
         );
     }
 
@@ -1630,7 +1581,7 @@ contract SkullOffers is OffersBase {
         // Get the owner of the token
         address owner = nonFungibleContract.ownerOf(_tokenId);
 
-        require(msg.sender == cooAddress || msg.sender == owner, "only COO or the owner can fulfill order");
+        require(msg.sender == adminAddress || msg.sender == owner, "only Admin or the owner can fulfill order");
 
         // T
         uint256 total = uint256(offer.total);
@@ -1650,9 +1601,9 @@ contract SkullOffers is OffersBase {
         nonFungibleContract.transferFrom(owner, bidder, _tokenId);
 
         // NFT has been transferred! Now calculate fees and transfer fund to the owner
-        // T - P, the CFO's earnings
-        uint256 cfoEarnings = total - offerPrice;
-        totalCFOEarnings += cfoEarnings;
+        // T - P, the Root's earnings
+        uint256 rootEarnings = total - offerPrice;
+        totalRootEarnings += rootEarnings;
 
         // Transfer money in escrow to owner
         _tryPushFunds(_tokenId, owner, offerPrice);
@@ -1662,7 +1613,7 @@ contract SkullOffers is OffersBase {
             bidder,
             owner,
             offerPrice,
-            cfoEarnings
+            rootEarnings
         );
     }
 
@@ -1675,7 +1626,7 @@ contract SkullOffers is OffersBase {
         uint256 len = _tokenIds.length;
 
         // Use temporary accumulator
-        uint256 cumulativeCFOEarnings = 0;
+        uint256 cumulativeRootEarnings = 0;
 
         for (uint256 i = 0; i < len; i++) {
             uint256 tokenId = _tokenIds[i];
@@ -1694,17 +1645,17 @@ contract SkullOffers is OffersBase {
             // Get a reference of the bidder address before removing offer from storage
             address bidder = offer.bidder;
 
-            // CFO gets the flat fee
-            uint256 cfoEarnings = uint256(offer.unsuccessfulFee);
+            // Root gets the flat fee
+            uint256 rootEarnings = uint256(offer.unsuccessfulFee);
 
             // Bidder gets refund: T - flat
-            uint256 toRefund = uint256(offer.total) - cfoEarnings;
+            uint256 toRefund = uint256(offer.total) - rootEarnings;
 
             // Ensure the previous offer has been removed before refunding
             delete tokenIdToOffer[tokenId];
 
-            // Add to cumulative balance of CFO's earnings
-            cumulativeCFOEarnings += cfoEarnings;
+            // Add to cumulative balance of Root's earnings
+            cumulativeRootEarnings += rootEarnings;
 
             // Finally, sending funds to this bidder. If failed, the fund will be kept in escrow
             // under lostAndFound's address
@@ -1718,13 +1669,13 @@ contract SkullOffers is OffersBase {
                 tokenId,
                 bidder,
                 toRefund,
-                cfoEarnings
+                rootEarnings
             );
         }
 
-        // Add to CFO's balance if any expired offer has been removed
-        if (cumulativeCFOEarnings > 0) {
-            totalCFOEarnings += cumulativeCFOEarnings;
+        // Add to Root's balance if any expired offer has been removed
+        if (cumulativeRootEarnings > 0) {
+            totalRootEarnings += cumulativeRootEarnings;
         }
     }
 

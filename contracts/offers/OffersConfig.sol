@@ -64,20 +64,20 @@ contract OffersConfig is OffersAccessControl {
 
     /// @notice Sets the minimumTotalValue value. This would impact offers created after this has been set, but
     ///  not existing offers.
-    /// @notice Only callable by COO, when not frozen.
+    /// @notice Only callable by Admin or Root, when not frozen.
     /// @param _newMinTotal The minimumTotalValue value to set
-    function setMinimumTotalValue(uint256 _newMinTotal) external onlyCOO whenNotFrozen {
+    function setMinimumTotalValue(uint256 _newMinTotal) external onlyAdminOrRoot whenNotFrozen {
         _setMinimumTotalValue(_newMinTotal, unsuccessfulFee);
         emit MinimumTotalValueUpdated(_newMinTotal);
     }
 
     /// @notice Sets the globalDuration value. All offers that are created or updated will compute a new expiration
     ///  time based on this.
-    /// @notice Only callable by COO, when not frozen.
+    /// @notice Only callable by Admin or Root, when not frozen.
     /// @dev Need to check for underflow since function argument is 256 bits, and the offer expiration time is
     ///  packed into 64 bits in the Offer struct.
     /// @param _newDuration The globalDuration value to set.
-    function setGlobalDuration(uint256 _newDuration) external onlyCOO whenNotFrozen {
+    function setGlobalDuration(uint256 _newDuration) external onlyAdminOrRoot whenNotFrozen {
         require(_newDuration == uint256(uint64(_newDuration)), "new globalDuration value must not underflow");
         globalDuration = _newDuration;
         emit GlobalDurationUpdated(_newDuration);
@@ -85,10 +85,10 @@ contract OffersConfig is OffersAccessControl {
 
     /// @notice Sets the offerCut value. All offers will compute a fee taken by this contract based on this
     ///  configuration.
-    /// @notice Only callable by COO, when not frozen.
+    /// @notice Only callable by Admin or Root, when not frozen.
     /// @dev As this configuration is a basis point, the value to set must be less than or equal to 10000.
     /// @param _newOfferCut The offerCut value to set.
-    function setOfferCut(uint256 _newOfferCut) external onlyCOO whenNotFrozen {
+    function setOfferCut(uint256 _newOfferCut) external onlyAdminOrRoot whenNotFrozen {
         _setOfferCut(_newOfferCut);
         emit OfferCutUpdated(_newOfferCut);
     }
@@ -100,9 +100,9 @@ contract OffersConfig is OffersAccessControl {
     ///  existence of offers that, when overbid or expired, would result in the main contract taking too big of a cut.
     ///  In the case of a sufficiently low offer price, eg. the same as unsuccessfulFee, the most the main contract can
     ///  ever take is simply the amount of unsuccessfulFee.
-    /// @notice Only callable by COO, when not frozen.
+    /// @notice Only callable by Admin or Root, when not frozen.
     /// @param _newUnsuccessfulFee The unsuccessfulFee value to set.
-    function setUnsuccessfulFee(uint256 _newUnsuccessfulFee) external onlyCOO whenNotFrozen {
+    function setUnsuccessfulFee(uint256 _newUnsuccessfulFee) external onlyAdminOrRoot whenNotFrozen {
         require(minimumTotalValue >= (2 * _newUnsuccessfulFee), "unsuccessful value must be <= half of minimumTotalValue");
         unsuccessfulFee = _newUnsuccessfulFee;
         emit UnsuccessfulFeeUpdated(_newUnsuccessfulFee);
@@ -110,10 +110,10 @@ contract OffersConfig is OffersAccessControl {
 
     /// @notice Sets the minimumPriceIncrement value. All offers that are overbid must have a price greater
     ///  than the minimum increment computed from this basis point.
-    /// @notice Only callable by COO, when not frozen.
+    /// @notice Only callable by Admin or Root, when not frozen.
     /// @dev As this configuration is a basis point, the value to set must be less than or equal to 10000.
     /// @param _newMinimumPriceIncrement The minimumPriceIncrement value to set.
-    function setMinimumPriceIncrement(uint256 _newMinimumPriceIncrement) external onlyCOO whenNotFrozen {
+    function setMinimumPriceIncrement(uint256 _newMinimumPriceIncrement) external onlyAdmin whenNotFrozen {
         _setMinimumPriceIncrement(_newMinimumPriceIncrement);
         emit MinimumPriceIncrementUpdated(_newMinimumPriceIncrement);
     }

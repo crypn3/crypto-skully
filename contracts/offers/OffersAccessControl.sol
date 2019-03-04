@@ -2,17 +2,12 @@ pragma solidity ^0.4.24;
 
 contract OffersAccessControl {
 
-    // The address of the account that can replace ceo, coo, cfo, lostAndFound
-    address public ceoAddress;
-    // The address of the account that can adjust configuration variables and fulfill offer
-    address public cooAddress;
-    // The address of the CFO account that receives all the fees
-    address public cfoAddress;
-    // The address where funds of failed "push"es go to
+    address public rootAddress;
+    address public adminAddress;
     address public lostAndFoundAddress;
 
-    // The total amount of ether (in wei) in escrow owned by CFO
-    uint256 public totalCFOEarnings;
+    // The total amount of ether (in wei) in escrow owned by Root
+    uint256 public totalRootEarnings;
     // The total amount of ether (in wei) in escrow owned by lostAndFound
     uint256 public totalLostAndFoundBalance;
 
@@ -21,37 +16,27 @@ contract OffersAccessControl {
     ///  and all whenNotFrozen actions will be blocked.
     bool public frozen = false;
 
-    /// @notice Access modifier for CEO-only functionality
-    modifier onlyCEO() {
-        require(msg.sender == ceoAddress, "only CEO is allowed to perform this operation");
+    /// @notice Access modifier for Root-only functionality
+    modifier onlyRoot() {
+        require(msg.sender == rootAddress, "only Root is allowed to perform this operation");
         _;
     }
 
-    /// @notice Access modifier for COO-only functionality
-    modifier onlyCOO() {
-        require(msg.sender == cooAddress, "only COO is allowed to perform this operation");
+    /// @notice Access modifier for Admin-only functionality
+    modifier onlyAdmin() {
+        require(msg.sender == adminAddress, "only Admin is allowed to perform this operation");
         _;
     }
 
-    /// @notice Access modifier for CFO-only functionality
-    modifier onlyCFO() {
-        require(
-            msg.sender == cfoAddress &&
-            msg.sender != address(0),
-            "only CFO is allowed to perform this operation"
-        );
-        _;
-    }
-
-    /// @notice Access modifier for CEO-only or CFO-only functionality
-    modifier onlyCeoOrCfo() {
+    /// @notice Access modifier for Admin-only or Root-only functionality
+    modifier onlyAdminOrRoot() {
         require(
             msg.sender != address(0) &&
         (
-        msg.sender == ceoAddress ||
-        msg.sender == cfoAddress
+        msg.sender == adminAddress ||
+        msg.sender == rootAddress
         ),
-            "only CEO or CFO is allowed to perform this operation"
+            "only Admin or Root is allowed to perform this operation"
         );
         _;
     }
@@ -66,40 +51,34 @@ contract OffersAccessControl {
         _;
     }
 
-    /// @notice Assigns a new address to act as the CEO. Only available to the current CEO.
-    /// @param _newCEO The address of the new CEO
-    function setCEO(address _newCEO) external onlyCEO {
-        require(_newCEO != address(0), "new CEO address cannot be the zero-account");
-        ceoAddress = _newCEO;
+    /// @notice Assigns a new address to act as the Admin. Only available to the current Admin or Root.
+    /// @param _newAdmin The address of the new Admin
+    function setAdmin(address _newAdmin) public onlyAdminOrRoot {
+        require(_newAdmin != address(0), "new Admin address cannot be the zero-account");
+        adminAddress = _newAdmin;
     }
 
-    /// @notice Assigns a new address to act as the COO. Only available to the current CEO.
-    /// @param _newCOO The address of the new COO
-    function setCOO(address _newCOO) public onlyCEO {
-        require(_newCOO != address(0), "new COO address cannot be the zero-account");
-        cooAddress = _newCOO;
+
+    /// @notice Assigns a new address to act as the Root. Only available to the current Root.
+    /// @param _newRoot The address of the new Root
+    function setRoot(address _newRoot) external onlyRoot {
+        require(_newRoot != address(0), "new Root address cannot be the zero-account");
+        rootAddress = _newRoot;
     }
 
-    /// @notice Assigns a new address to act as the CFO. Only available to the current CEO.
-    /// @param _newCFO The address of the new CFO
-    function setCFO(address _newCFO) external onlyCEO {
-        require(_newCFO != address(0), "new CFO address cannot be the zero-account");
-        cfoAddress = _newCFO;
-    }
-
-    /// @notice Assigns a new address to act as the LostAndFound account. Only available to the current CEO.
+    /// @notice Assigns a new address to act as the LostAndFound account. Only available to the current Root
     /// @param _newLostAndFound The address of the new lostAndFound address
-    function setLostAndFound(address _newLostAndFound) external onlyCEO {
+    function setLostAndFound(address _newLostAndFound) external onlyRoot {
         require(_newLostAndFound != address(0), "new lost and found cannot be the zero-account");
         lostAndFoundAddress = _newLostAndFound;
     }
 
-    /// @notice CFO withdraws the CFO earnings
-    function withdrawTotalCFOEarnings() external onlyCFO {
+    /// @notice Root withdraws the Root earnings
+    function withdrawTotalRootEarnings() external onlyRoot {
         // Obtain reference
-        uint256 balance = totalCFOEarnings;
-        totalCFOEarnings = 0;
-        cfoAddress.transfer(balance);
+        uint256 balance = totalRootEarnings;
+        totalRootEarnings = 0;
+        rootAddress.transfer(balance);
     }
 
     /// @notice LostAndFound account withdraws all the lost and found amount
@@ -122,12 +101,9 @@ contract OffersAccessControl {
         _;
     }
 
-    /// @notice Called by CEO or CFO role to freeze the contract.
-    ///  Only intended to be used if a serious exploit is detected.
-    /// @notice Allow two C-level roles to call this function in case either CEO or CFO key is compromised.
-    /// @notice This is a one-way process; there is no un-freezing.
+    /// @notice Called by Root or Admin role to freeze the contract.
     /// @dev A frozen contract will be frozen forever, there's no way to undo this action.
-    function freeze() external onlyCeoOrCfo whenNotFrozen {
+    function freeze() external onlyAdminOrRoot whenNotFrozen {
         frozen = true;
     }
 }

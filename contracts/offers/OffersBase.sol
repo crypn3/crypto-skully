@@ -26,7 +26,7 @@ contract OffersBase is OffersConfig {
     /// @param tokenId The token id that the cancelled offer was offering to buy.
     /// @param bidder The creator of the offer.
     /// @param bidderReceived The eth amount that the bidder received as refund.
-    /// @param fee The eth amount that CFO received as the fee for the cancellation.
+    /// @param fee The eth amount that Root received as the fee for the cancellation.
     event OfferCancelled(
         uint256 tokenId,
         address bidder,
@@ -40,7 +40,7 @@ contract OffersBase is OffersConfig {
     /// @param bidder The creator of the offer.
     /// @param owner The original owner of the token who accepted the offer.
     /// @param ownerReceived The eth amount that the original owner received from the offer
-    /// @param fee The eth amount that CFO received as the fee for the successfully fulfilling.
+    /// @param fee The eth amount that Root received as the fee for the successfully fulfilling.
     event OfferFulfilled(
         uint256 tokenId,
         address bidder,
@@ -68,7 +68,7 @@ contract OffersBase is OffersConfig {
     /// @param tokenId The token id that the removed offer was offering to buy
     /// @param bidder The creator of the offer.
     /// @param bidderReceived The eth amount that the bidder received from the offer.
-    /// @param fee The eth amount that CFO received as the fee.
+    /// @param fee The eth amount that Root received as the fee.
     event ExpiredOfferRemoved(
         uint256 tokenId,
         address bidder,
@@ -108,14 +108,10 @@ contract OffersBase is OffersConfig {
         // Bidder The creator of the offer
         address bidder;
         // Offer cut in basis points, which ranges from 0-10000.
-        // It's the cut that CFO takes when the offer is successfully accepted by the owner.
-        // This is stored in the offer struct so that it won't be changed if COO updates
-        // the `offerCut` for new offers.
         uint16 offerCut;
         // Total value (in wei) a bidder sent in msg.value to create the offer
         uint128 total;
-        // Fee (in wei) that CFO takes when the offer is expired or overbid.
-        // This is stored in the offer struct so that it won't be changed if COO updates
+        // Fee (in wei) that Admin takes when the offer is expired or overbid.
         // the `unsuccessfulFee` for new offers.
         uint128 unsuccessfulFee;
     }
@@ -141,7 +137,7 @@ contract OffersBase is OffersConfig {
     /// @dev This is safe against overflow because msg.value and the total supply of ether is capped within 128 bits.
     /// @param _total The total value of the offer. Also is the msg.value that the bidder sent when
     ///  creating the offer.
-    /// @param _offerCut The percentage in basis points that will be taken by the CFO if the offer is fulfilled.
+    /// @param _offerCut The percentage in basis points that will be taken by the Admin if the offer is fulfilled.
     /// @return The offer price that the owner will receive if the offer is fulfilled.
     function _computeOfferPrice(uint256 _total, uint256 _offerCut) internal pure returns (uint256) {
         return _total * 1e4 / (1e4 + _offerCut);
