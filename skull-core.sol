@@ -1,8 +1,7 @@
 pragma solidity ^0.4.24;
 
-
 /**
- * @title - Crypto Skylly
+ * @title - Crypto Skully
  *  ________       ___  __        ___  ___      ___           ___            ___    ___
  * |\   ____\     |\  \|\  \     |\  \|\  \    |\  \         |\  \          |\  \  /  /|
  * \ \  \___|_    \ \  \/  /|_   \ \  \\\  \   \ \  \        \ \  \         \ \  \/  / /
@@ -24,6 +23,8 @@ pragma solidity ^0.4.24;
  *
  * Game at https://skullylife.co/
  **/
+
+// File: openzeppelin-solidity/contracts/introspection/IERC165.sol
 
 /**
  * @title IERC165
@@ -1620,6 +1621,33 @@ contract SaleClockAuction is ClockAuction {
 
 // File: contracts/auction/SkullAuction.sol
 
+/**
+ * @title - Crypto Skully
+ *  ________       ___  __        ___  ___      ___           ___            ___    ___
+ * |\   ____\     |\  \|\  \     |\  \|\  \    |\  \         |\  \          |\  \  /  /|
+ * \ \  \___|_    \ \  \/  /|_   \ \  \\\  \   \ \  \        \ \  \         \ \  \/  / /
+ *  \ \_____  \    \ \   ___  \   \ \  \\\  \   \ \  \        \ \  \         \ \    / /
+ *   \|____|\  \    \ \  \\ \  \   \ \  \\\  \   \ \  \____    \ \  \____     \/  /  /
+ *     ____\_\  \    \ \__\\ \__\   \ \_______\   \ \_______\   \ \_______\ __/  / /
+ *    |\_________\    \|__| \|__|    \|_______|    \|_______|    \|_______||\___/ /
+ *    \|_________|                                                         \|___|/
+ *
+ * ---
+ *
+ * POWERED BY
+ *    ____                  _          _   _ _____ _ _
+ *  / ___|_ __ _   _ _ __ | |_ ___   | \ | |___ /| | |
+ * | |   | '__| | | | '_ \| __/ _ \  |  \| | |_ \| | |
+ * | |___| |  | |_| | |_) | || (_) | | |\  |___) |_|_|
+ *  \____|_|   \__, | .__/ \__\___/  |_| \_|____/(_|_)
+ *             |___/|_|
+ *
+ * Game at https://skullylife.co/
+ **/
+
+
+
+
 /// @title Handles creating auctions for sale and siring of skullies.
 ///  This wrapper of ReverseAuction exists only so that users can create
 ///  auctions with only one transaction.
@@ -1661,6 +1689,30 @@ contract SkullAuction is SkullBase, SkullAccessControl {
 }
 
 // File: contracts/SkullCore.sol
+
+/**
+ * @title - Crypto Skully
+ *  ________       ___  __        ___  ___      ___           ___            ___    ___
+ * |\   ____\     |\  \|\  \     |\  \|\  \    |\  \         |\  \          |\  \  /  /|
+ * \ \  \___|_    \ \  \/  /|_   \ \  \\\  \   \ \  \        \ \  \         \ \  \/  / /
+ *  \ \_____  \    \ \   ___  \   \ \  \\\  \   \ \  \        \ \  \         \ \    / /
+ *   \|____|\  \    \ \  \\ \  \   \ \  \\\  \   \ \  \____    \ \  \____     \/  /  /
+ *     ____\_\  \    \ \__\\ \__\   \ \_______\   \ \_______\   \ \_______\ __/  / /
+ *    |\_________\    \|__| \|__|    \|_______|    \|_______|    \|_______||\___/ /
+ *    \|_________|                                                         \|___|/
+ *
+ * ---
+ *
+ * POWERED BY
+ *    ____                  _          _   _ _____ _ _
+ *  / ___|_ __ _   _ _ __ | |_ ___   | \ | |___ /| | |
+ * | |   | '__| | | | '_ \| __/ _ \  |  \| | |_ \| | |
+ * | |___| |  | |_| | |_) | || (_) | | |\  |___) |_|_|
+ *  \____|_|   \__, | .__/ \__\___/  |_| \_|____/(_|_)
+ *             |___/|_|
+ *
+ * Game at https://skullylife.co/
+ **/
 
 contract SkullCore is SkullAuction {
 
