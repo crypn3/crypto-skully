@@ -1,5 +1,29 @@
 pragma solidity ^0.4.24;
 
+/**
+ * @title - Crypto Skully
+ *  ________       ___  __        ___  ___      ___           ___            ___    ___
+ * |\   ____\     |\  \|\  \     |\  \|\  \    |\  \         |\  \          |\  \  /  /|
+ * \ \  \___|_    \ \  \/  /|_   \ \  \\\  \   \ \  \        \ \  \         \ \  \/  / /
+ *  \ \_____  \    \ \   ___  \   \ \  \\\  \   \ \  \        \ \  \         \ \    / /
+ *   \|____|\  \    \ \  \\ \  \   \ \  \\\  \   \ \  \____    \ \  \____     \/  /  /
+ *     ____\_\  \    \ \__\\ \__\   \ \_______\   \ \_______\   \ \_______\ __/  / /
+ *    |\_________\    \|__| \|__|    \|_______|    \|_______|    \|_______||\___/ /
+ *    \|_________|                                                         \|___|/
+ *
+ * ---
+ *
+ * POWERED BY
+ *    ____                  _          _   _ _____ _ _
+ *  / ___|_ __ _   _ _ __ | |_ ___   | \ | |___ /| | |
+ * | |   | '__| | | | '_ \| __/ _ \  |  \| | |_ \| | |
+ * | |___| |  | |_| | |_) | || (_) | | |\  |___) |_|_|
+ *  \____|_|   \__, | .__/ \__\___/  |_| \_|____/(_|_)
+ *             |___/|_|
+ *
+ * Game at https://skullylife.co/
+ **/
+
 import "../SkullBase.sol";
 import "../ownership/SkullAccessControl.sol";
 import "./SaleClockAuction.sol";
@@ -9,19 +33,13 @@ import "./SaleClockAuction.sol";
 ///  auctions with only one transaction.
 contract SkullAuction is SkullBase, SkullAccessControl {
     SaleClockAuction public saleAuction;
-    // @notice The auction contract variables are defined in KittyBase to allow
-    //  us to refer to them in KittyOwnership to prevent accidental transfers.
-    // `saleAuction` refers to the auction for gen0 and p2p sale of kitties.
-    // `siringAuction` refers to the auction for siring rights of kitties.
 
     /// @dev Sets the reference to the sale auction.
     /// @param _address - Address of sale contract.
     function setSaleAuctionAddress(address _address) external onlyAdministrator {
         SaleClockAuction candidateContract = SaleClockAuction(_address);
 
-        // NOTE: verify that a contract is what we expect - https://github.com/Lunyr/crowdsale-contracts/blob/cfadd15986c30521d8ba7d5b6f57b4fefcc7ac38/contracts/LunyrToken.sol#L117
         require(candidateContract.isSaleClockAuction());
-
         // Set the new contract address
         saleAuction = candidateContract;
     }
@@ -45,9 +63,6 @@ contract SkullAuction is SkullBase, SkullAccessControl {
         );
     }
 
-    /// @dev Transfers the balance of the sale auction contract
-    /// to the KittyCore contract. We use two-step withdrawal to
-    /// prevent two transfer calls in the auction bid function.
     function withdrawAuctionBalances() external onlyAdministrator {
         saleAuction.withdrawBalance();
     }
