@@ -66,5 +66,10 @@ secrets.json
 res1.sol
 res2.sol
 res3.sol
+skull-auction.sol
+skull-core.sol
+skull-fighting.sol
+skull-offers.sol
 scripts/images/*
 scripts/service-account.json
+
