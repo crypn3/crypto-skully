@@ -11,7 +11,7 @@ Crypto skully
 
 ## Setup
 Run `npm install` in the root directory  
-Run `npm install -g truffle` to install [Truffle framework](http://truffleframework.com/docs/getting_started/installation)
+Run `npm install -g truffle` to install [Truffle framework](http://truffleframework.com/docs/getting_started/installation) </br>
 `export GOOGLE_APPLICATION_CREDENTIALS=service-account.json`  
 Install [Ganache](https://truffleframework.com/ganache)  
 
